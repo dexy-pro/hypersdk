@@ -1884,9 +1884,9 @@ impl Client {
     // Account Abstraction Mode actions
     // -----------------------------------------------------------------
 
-    /// Check builder fee approval for a user.
+    /// Query the maximum builder fee approved by a user for a specific builder.
     ///
-    /// Returns the maximum builder fee approved by `user` for `builder`,
+    /// Returns the maximum fee approved by `user` for `builder`,
     /// expressed in tenths of a basis point (e.g. `1` means 0.001%).
     /// Returns `0` if no approval has been granted.
     ///
@@ -1900,16 +1900,16 @@ impl Client {
     /// let client = hypercore::mainnet();
     /// let user: Address = "0x...".parse()?;
     /// let builder: Address = "0x...".parse()?;
-    /// let max_fee = client.check_builder_fee_approval(user, builder).await?;
+    /// let max_fee = client.max_builder_fee(user, builder).await?;
     /// println!("Max approved fee: {} (tenths of a bps)", max_fee);
     /// # Ok(())
     /// # }
     /// ```
     ///
     /// <https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint#check-builder-fee-approval>
-    pub async fn check_builder_fee_approval(&self, user: Address, builder: Address) -> Result<u32> {
-        let req = InfoRequest::CheckBuilderFeeApproval { user, builder };
-        self.send_info_request("check_builder_fee_approval", &req).await
+    pub async fn max_builder_fee(&self, user: Address, builder: Address) -> Result<u32> {
+        let req = InfoRequest::MaxBuilderFee { user, builder };
+        self.send_info_request("max_builder_fee", &req).await
     }
 
     /// Query the current account abstraction mode for a user.

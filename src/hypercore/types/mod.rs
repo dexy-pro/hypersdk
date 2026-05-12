@@ -3533,7 +3533,7 @@ pub(super) enum InfoRequest {
         user: Address,
     },
     /// Check builder fee approval for a user.
-    CheckBuilderFeeApproval {
+    MaxBuilderFee {
         user: Address,
         builder: Address,
     },
