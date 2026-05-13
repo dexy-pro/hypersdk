@@ -748,8 +748,8 @@ pub struct ApproveBuilderFee {
     pub hyperliquid_chain: Chain,
     /// The maximum allowed builder fee rate as a percent string; e.g. "0.001%".
     pub max_fee_rate: String,
-    /// Builder address in 42-character hexadecimal format.
-    pub builder: String,
+    /// Builder address.
+    pub builder: Address,
     /// Request nonce (timestamp in milliseconds).
     /// Must match nonce in outer request body.
     pub nonce: u64,
@@ -1289,7 +1289,9 @@ mod tests {
             signature_chain_id: "0xa4b1".to_string(),
             hyperliquid_chain: Chain::Mainnet,
             max_fee_rate: "0.001%".to_string(),
-            builder: "0x8c967e73e7b15087c42a10d344cff4c96d877f1d".to_string(),
+            builder: "0x8c967e73e7b15087c42a10d344cff4c96d877f1d"
+                .parse()
+                .unwrap(),
             nonce: 1_700_000_000_000,
         });
 
@@ -1303,7 +1305,12 @@ mod tests {
         match deserialized {
             Action::ApproveBuilderFee(inner) => {
                 assert_eq!(inner.max_fee_rate, "0.001%");
-                assert_eq!(inner.builder, "0x8c967e73e7b15087c42a10d344cff4c96d877f1d");
+                assert_eq!(
+                    inner.builder,
+                    "0x8c967e73e7b15087c42a10d344cff4c96d877f1d"
+                        .parse::<Address>()
+                        .unwrap()
+                );
                 assert_eq!(inner.nonce, 1_700_000_000_000);
             }
             _ => assert!(false, "wrong variant"),

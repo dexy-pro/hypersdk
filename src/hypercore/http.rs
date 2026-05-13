@@ -1368,13 +1368,13 @@ impl Client {
     /// # Parameters
     ///
     /// - `signer`: The wallet signing the approval
-    /// - `builder`: Builder address in 42-character hexadecimal format
+    /// - `builder`: Builder address
     /// - `max_fee_rate`: Max fee as percent string (e.g. `"0.001%"`)
     /// - `nonce`: The nonce for this action
     pub async fn approve_builder_fee<S: Signer + Send + Sync>(
         &self,
         signer: &S,
-        builder: String,
+        builder: Address,
         max_fee_rate: String,
         nonce: u64,
     ) -> Result<()> {
@@ -2660,7 +2660,7 @@ where
     }
 
     /// Approve the maximum fee rate a builder can charge for routed orders.
-    pub async fn approve_builder_fee(&self, builder: String, max_fee_rate: String) -> Result<()> {
+    pub async fn approve_builder_fee(&self, builder: Address, max_fee_rate: String) -> Result<()> {
         let chain = self.client.chain;
 
         let approve_builder_fee = ApproveBuilderFee {

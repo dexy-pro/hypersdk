@@ -2204,9 +2204,11 @@ pub struct BatchOrder {
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Builder {
     /// Builder address.
-    pub b: String,
+    #[serde(rename = "b")]
+    pub builder_address: Address,
     /// Builder fee in tenths of basis points.
-    pub f: u32,
+    #[serde(rename = "f")]
+    pub fee: u32,
 }
 
 /// Grouping type for batch orders.
