@@ -19,7 +19,8 @@ use clap::ValueEnum;
 use hypersdk::{Address, hypercore::PrivateKeySigner};
 use iroh::{
     Endpoint, SecretKey,
-    discovery::{dns::DnsDiscovery, mdns::MdnsDiscovery},
+    address_lookup::{dns::DnsAddressLookup, mdns::MdnsAddressLookup, pkarr::PkarrPublisher},
+    endpoint::presets::Empty,
 };
 use iroh_tickets::endpoint::EndpointTicket;
 use strsim::levenshtein;
@@ -88,7 +89,7 @@ pub fn make_key(_signer: &impl Signer) -> SecretKey {
     // let mut address_bytes = [0u8; 32];
     // address_bytes[0..20].copy_from_slice(&public_address[..]);
     // SecretKey::from_bytes(&address_bytes)
-    SecretKey::generate(&mut rand_09::rng())
+    SecretKey::generate()
 }
 
 /// Starts a gossip node for peer-to-peer multi-sig coordination.
@@ -116,11 +117,12 @@ pub async fn start_gossip(
     key: iroh::SecretKey,
     wait_online: bool,
 ) -> anyhow::Result<(Endpoint, EndpointTicket)> {
-    let endpoint = Endpoint::builder()
+    let endpoint = Endpoint::builder(Empty)
         .secret_key(key)
         .relay_mode(iroh::RelayMode::Default)
-        .discovery(DnsDiscovery::n0_dns())
-        .discovery(MdnsDiscovery::builder().advertise(true))
+        .address_lookup(DnsAddressLookup::n0_dns())
+        .address_lookup(PkarrPublisher::n0_dns())
+        .address_lookup(MdnsAddressLookup::builder().advertise(true))
         .bind()
         .await?;
 
