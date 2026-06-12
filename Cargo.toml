@@ -182,7 +182,7 @@ rustdoc-args = ["--cfg", "docsrs"]
 
 ## Runtime dependencies
 [dependencies]
-alloy = { version = "1.5.2", default-features = false, features = ["contract", "eip712", "getrandom", "providers", "reqwest", "reqwest-rustls-tls", "rpc", "rpc-types", "signer-local", "signers", "sol-types"] }
+alloy = { version = "2.0.0", default-features = false, features = ["contract", "eip712", "getrandom", "providers", "reqwest", "reqwest-rustls-tls", "rpc", "rpc-types", "signer-local", "signers", "sol-types"] }
 anyhow = "1"
 thiserror = "2"
 const-hex = { version = "1.17", features = ["serde"] }
