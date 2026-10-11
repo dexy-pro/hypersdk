@@ -929,8 +929,9 @@ pub struct UpdateIsolatedMargin {
     pub asset: usize,
     /// `true` for a long position, `false` for a short position.
     pub is_buy: bool,
-    /// Margin delta in USD (scaled integer representation).
-    pub ntli: u64,
+    /// Margin delta in USD with 6 decimals (`1_000_000` is $1). Positive adds margin to the
+    /// position, negative removes it.
+    pub ntli: i64,
 }
 
 /// Request to update leverage for a perpetual asset.
@@ -2062,7 +2063,7 @@ pub(crate) fn recovered_other_signer(reply: &str, signer: Address) -> Option<Str
 
 #[cfg(test)]
 mod tests {
-    use alloy::primitives::address;
+    use alloy::primitives::{address, b256};
 
     use super::*;
 
@@ -2246,6 +2247,29 @@ mod tests {
             address,
             address!("0x5eCb62791B22A3108367c2A2024019Ee7eA88431")
         );
+    }
+
+    /// Hashes from `action_hash` in the Python SDK 0.24.0 for the same actions. A negative
+    /// `ntli` removes margin and must hash as a signed msgpack integer, as Python packs it.
+    #[test]
+    fn update_isolated_margin_hash_matches_python_sdk() {
+        for (ntli, expected) in [
+            (
+                -1_000_000,
+                b256!("0xa7ca3c20db07af75236a790cac3e8549264d796fe6f269ccc43dad43b7ca3274"),
+            ),
+            (
+                1_000_000,
+                b256!("0x840973ced4652cca505364f3a41e8d2a71f45d5bf76f9a74ba801ce40594ccdf"),
+            ),
+        ] {
+            let action = Action::UpdateIsolatedMargin(UpdateIsolatedMargin {
+                asset: 124,
+                is_buy: true,
+                ntli,
+            });
+            assert_eq!(action.hash(1760000000000, None, None).unwrap(), expected);
+        }
     }
 
     #[test]
