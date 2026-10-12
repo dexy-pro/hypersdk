@@ -333,7 +333,7 @@ pub async fn update_leverage<S: SignerSync>(&self, signer: &S, asset: usize, is_
 ) -> Result<()>
 
 pub async fn update_isolated_margin<S: SignerSync>(&self, signer: &S, asset: usize, is_buy: bool,
-    ntli: u64, nonce: u64, vault_address: Option<Address>, expires_after: Option<DateTime<Utc>>,
+    ntli: i64, nonce: u64, vault_address: Option<Address>, expires_after: Option<DateTime<Utc>>,
 ) -> Result<()>
 
 pub async fn top_up_isolated_only_margin<S: SignerSync>(&self, signer: &S, asset: u32,
@@ -342,8 +342,8 @@ pub async fn top_up_isolated_only_margin<S: SignerSync>(&self, signer: &S, asset
 ```
 
 `update_leverage` doc: set it before opening the position. `asset` is `PerpMarket.index`.
-`update_isolated_margin`'s `ntli` has no doc comment beyond "Updates isolated margin for a
-position"; no example uses it.
+`update_isolated_margin`'s `ntli` is the margin delta in USD with 6 decimals (`1_000_000` is
+$1): positive adds margin, negative removes it. No example uses it.
 
 ```rust
 use hypersdk::hypercore::{self, NonceHandler, PerpMarket, PrivateKeySigner};
