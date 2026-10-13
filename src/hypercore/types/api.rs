@@ -1010,7 +1010,7 @@ impl AbstractionMode {
     pub fn from_api_str(s: &str) -> Result<Self, String> {
         match s {
             "disabled" | "i" | "standard" | "Standard" => Ok(Self::Standard),
-            "unifiedAccount" | "u" | "unified" => Ok(Self::UnifiedAccount),
+            "unifiedAccount" | "u" | "unified" | "default" => Ok(Self::UnifiedAccount),
             "portfolioMargin" | "p" | "portfolio" => Ok(Self::PortfolioMargin),
             other => Err(format!("unknown abstraction mode: {other}")),
         }
@@ -2733,6 +2733,10 @@ mod tests {
         assert_eq!(
             AbstractionMode::from_api_str("portfolioMargin").unwrap(),
             AbstractionMode::PortfolioMargin
+        );
+        assert_eq!(
+            AbstractionMode::from_api_str("default").unwrap(),
+            AbstractionMode::UnifiedAccount
         );
         assert!(AbstractionMode::from_api_str("unknown").is_err());
         assert!(AbstractionMode::default().is_standard());
