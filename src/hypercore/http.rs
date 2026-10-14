@@ -198,6 +198,7 @@ impl Client {
     /// // Subscribe and process messages
     /// # }
     /// ```
+    #[cfg(feature = "ws")]
     pub fn websocket(&self) -> super::WebSocket {
         let mut url = self.base_url.clone();
         let _ = url.set_scheme("wss");
@@ -208,6 +209,7 @@ impl Client {
     /// Creates a WebSocket connection without TLS (uses `ws://` instead of `wss://`).
     ///
     /// Useful for testing or local development.
+    #[cfg(feature = "ws")]
     pub fn websocket_no_tls(&self) -> super::WebSocket {
         let mut url = self.base_url.clone();
         let _ = url.set_scheme("ws");

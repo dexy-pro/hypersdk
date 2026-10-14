@@ -361,12 +361,15 @@ pub enum PostResponsePayload {
 /// # Related Types
 ///
 /// - [`Incoming`]: Messages received from WebSocket subscriptions
-/// - [`WebSocket`](crate::hypercore::ws::Connection): WebSocket client
+/// - `WebSocket`: WebSocket client
 /// - [`Bbo`], [`Trade`], [`L2Book`], [`Candle`], [`OrderUpdate`], [`Fill`]: Data types
 ///
 /// # Example
 ///
 /// ```no_run
+/// # fn main() {
+/// # #[cfg(feature = "ws")]
+/// # {
 /// use hypersdk::hypercore::{self, types::*};
 /// use futures::StreamExt;
 ///
@@ -385,6 +388,8 @@ pub enum PostResponsePayload {
 /// let user = "0x...".parse().unwrap();
 /// ws.subscribe(Subscription::OrderUpdates { user });
 /// ws.subscribe(Subscription::UserFills { user });
+/// # }
+/// # }
 /// # }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize, derive_more::Display)]
@@ -2433,7 +2438,7 @@ impl OrderResponseStatus {
 ///
 /// - [`OrderRequest`]: Individual order within the batch
 /// - [`OrderResponseStatus`]: Response status for each order
-/// - [`HttpClient::place`](crate::hypercore::http::Client::place): Method to submit orders
+/// - `HttpClient::place`: Method to submit orders
 ///
 /// # Example
 ///
@@ -2736,6 +2741,9 @@ pub struct ScheduleCancel {
 /// # Example
 ///
 /// ```no_run
+/// # fn main() {
+/// # #[cfg(feature = "http")]
+/// # {
 /// use hypersdk::hypercore;
 /// use hypersdk::Address;
 ///
@@ -2755,6 +2763,8 @@ pub struct ScheduleCancel {
 ///     );
 /// }
 /// # Ok(())
+/// # }
+/// # }
 /// # }
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -2958,6 +2968,9 @@ pub struct CumulativeFunding {
 /// # Example
 ///
 /// ```no_run
+/// # fn main() {
+/// # #[cfg(feature = "http")]
+/// # {
 /// use hypersdk::hypercore;
 ///
 /// # async fn example() -> anyhow::Result<()> {
@@ -2970,6 +2983,8 @@ pub struct CumulativeFunding {
 ///         rate.coin, rate.time, rate.funding_rate, rate.premium);
 /// }
 /// # Ok(())
+/// # }
+/// # }
 /// # }
 /// ```
 #[derive(Debug, Clone, Deserialize)]
@@ -3026,6 +3041,9 @@ impl FundingRate {
 /// # Example
 ///
 /// ```no_run
+/// # fn main() {
+/// # #[cfg(feature = "ws")]
+/// # {
 /// use hypersdk::hypercore::{self, ws::Event, types::*};
 /// use futures::StreamExt;
 ///
@@ -3041,6 +3059,8 @@ impl FundingRate {
 ///     }
 /// }
 /// # Ok(())
+/// # }
+/// # }
 /// # }
 /// ```
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -3473,6 +3493,7 @@ pub struct PerpDexDetails {
 impl PerpDexDetails {
     /// Pairs each entry of a raw `perpDexs` response with its index. The first entry is the
     /// validator-operated DEX, which the API returns as `null`.
+    #[cfg(any(feature = "http", test))]
     pub(crate) fn from_response(dexes: Vec<Option<Self>>) -> Vec<Self> {
         dexes
             .into_iter()
@@ -3482,7 +3503,7 @@ impl PerpDexDetails {
     }
 
     /// The [`Dex`] handle for this DEX, for use with requests such as
-    /// [`crate::hypercore::HttpClient::perps_from`].
+    /// `crate::hypercore::HttpClient::perps_from`.
     #[must_use]
     pub fn dex(&self) -> Dex {
         Dex::new(self.name.clone(), self.index)
@@ -3804,6 +3825,9 @@ pub struct ApiAgent {
 /// # Example
 ///
 /// ```no_run
+/// # fn main() {
+/// # #[cfg(feature = "http")]
+/// # {
 /// use hypersdk::hypercore;
 /// use hypersdk::Address;
 ///
@@ -3821,6 +3845,8 @@ pub struct ApiAgent {
 ///     _ => {}
 /// }
 /// # Ok(())
+/// # }
+/// # }
 /// # }
 /// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -3848,6 +3874,9 @@ pub enum UserRole {
 /// # Example
 ///
 /// ```no_run
+/// # fn main() {
+/// # #[cfg(feature = "http")]
+/// # {
 /// use hypersdk::hypercore;
 /// use hypersdk::Address;
 ///
@@ -3860,6 +3889,8 @@ pub enum UserRole {
 ///     println!("Vault {:?}: equity = {}", equity.vault_address, equity.equity);
 /// }
 /// # Ok(())
+/// # }
+/// # }
 /// # }
 /// ```
 #[derive(Debug, Clone, Deserialize)]
@@ -4116,6 +4147,9 @@ impl<'de> serde::Deserialize<'de> for VaultFollowerUser {
 /// # Example
 ///
 /// ```no_run
+/// # fn main() {
+/// # #[cfg(feature = "http")]
+/// # {
 /// use hypersdk::hypercore;
 /// use hypersdk::Address;
 ///
@@ -4129,6 +4163,8 @@ impl<'de> serde::Deserialize<'de> for VaultFollowerUser {
 ///     println!("  Account value: {}", sub.clearinghouse_state.margin_summary.account_value);
 /// }
 /// # Ok(())
+/// # }
+/// # }
 /// # }
 /// ```
 ///
@@ -4287,6 +4323,7 @@ pub struct CandleSnapshotRequest {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[serde(tag = "type")]
+#[cfg(feature = "http")]
 pub(super) enum InfoRequest {
     Meta {
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -5914,6 +5951,7 @@ mod tests {
     ///
     /// The deployer-action counterpart is
     /// `hypercore::types::deploy::tests::deployer_action_shapes_are_still_accepted`.
+    #[cfg(feature = "http")]
     #[tokio::test]
     #[ignore = "hits mainnet; run manually when auditing the SDK against the API docs"]
     async fn info_requests_are_still_answered() {
@@ -6123,6 +6161,7 @@ mod tests {
     /// ```bash
     /// cargo test --lib subscriptions_are_still_accepted -- --ignored --nocapture
     /// ```
+    #[cfg(all(feature = "http", feature = "ws"))]
     #[tokio::test]
     #[ignore = "hits mainnet; run manually when auditing the SDK against the API docs"]
     async fn subscriptions_are_still_accepted() {
@@ -6246,6 +6285,7 @@ mod tests {
     /// ```bash
     /// cargo test --lib subscription_payloads_still_parse -- --ignored --nocapture
     /// ```
+    #[cfg(all(feature = "http", feature = "ws"))]
     #[tokio::test]
     #[ignore = "hits mainnet; run manually when auditing the SDK against the API docs"]
     async fn subscription_payloads_still_parse() {
@@ -6329,6 +6369,7 @@ mod tests {
         );
     }
 
+    #[cfg(feature = "http")]
     mod info_request_serialization {
         use alloy::primitives::address;
         use either::Either;

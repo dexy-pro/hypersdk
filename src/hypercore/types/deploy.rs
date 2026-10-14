@@ -996,6 +996,7 @@ mod tests {
     /// ```bash
     /// cargo test --lib deployer_action_shapes -- --ignored --nocapture
     /// ```
+    #[cfg(feature = "http")]
     #[tokio::test]
     #[ignore = "hits testnet; run manually when auditing the SDK against the API docs"]
     async fn deployer_action_shapes_are_still_accepted() {

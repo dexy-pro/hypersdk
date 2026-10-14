@@ -1469,7 +1469,7 @@ pub enum AddressEncoding {
 /// Transfer a token from Core to the EVM with an extra data payload.
 ///
 /// The destination contract must implement `ICoreReceiveWithData`. Unlike
-/// [`crate::hypercore::HttpClient::transfer_to_evm`], this carries `data` to the recipient and can
+/// `crate::hypercore::HttpClient::transfer_to_evm`, this carries `data` to the recipient and can
 /// target a chain other than HyperEVM.
 ///
 /// This is a user-signed EIP-712 action (`HyperliquidTransaction:SendToEvmWithData`).
@@ -2052,7 +2052,7 @@ pub struct NegateOutcome {
 /// 0x… does not exist." or "Must deposit before performing actions. User: 0x…", naming the
 /// address recovered from the signature. Any address other than the signer's means the signed
 /// bytes differ from what the exchange hashes, even though the payload parsed.
-#[cfg(test)]
+#[cfg(all(test, feature = "http"))]
 pub(crate) fn recovered_other_signer(reply: &str, signer: Address) -> Option<String> {
     let start = ["User or API Wallet ", "User: "]
         .iter()
@@ -2871,6 +2871,7 @@ mod tests {
     /// ```bash
     /// cargo test --lib undocumented_action_shapes_are_accepted -- --ignored --nocapture
     /// ```
+    #[cfg(feature = "http")]
     #[tokio::test]
     #[ignore = "hits mainnet; run manually when auditing the SDK against the API"]
     async fn undocumented_action_shapes_are_accepted() {

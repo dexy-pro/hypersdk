@@ -5,8 +5,8 @@
 //!
 //! # Components
 //!
-//! - [`HttpClient`]: HTTP client for API interactions (orders, queries, transfers)
-//! - [`WebSocket`]: Real-time WebSocket connection for market data and order updates
+//! - `HttpClient`: HTTP client for API interactions (orders, queries, transfers)
+//! - `WebSocket`: Real-time WebSocket connection for market data and order updates
 //! - Market types: [`PerpMarket`], [`SpotMarket`], [`SpotToken`]
 //! - Order types and operations in the [`types`] module
 //!
@@ -15,6 +15,9 @@
 //! ## Query Markets
 //!
 //! ```no_run
+//! # fn main() {
+//! # #[cfg(feature = "http")]
+//! # {
 //! use hypersdk::hypercore;
 //!
 //! # async fn example() -> anyhow::Result<()> {
@@ -33,11 +36,16 @@
 //! }
 //! # Ok(())
 //! # }
+//! # }
+//! # }
 //! ```
 //!
 //! ## WebSocket Market Data
 //!
 //! ```no_run
+//! # fn main() {
+//! # #[cfg(feature = "ws")]
+//! # {
 //! use hypersdk::hypercore::{self, types::*, ws::Event};
 //! use futures::StreamExt;
 //!
@@ -69,11 +77,16 @@
 //! }
 //! # Ok(())
 //! # }
+//! # }
+//! # }
 //! ```
 //!
 //! ## Place Orders
 //!
 //! ```no_run
+//! # fn main() {
+//! # #[cfg(feature = "http")]
+//! # {
 //! use hypersdk::hypercore::{self, types::*, PrivateKeySigner};
 //!
 //! # async fn example() -> anyhow::Result<()> {
@@ -84,15 +97,19 @@
 //! // See the crate documentation for complete examples
 //! # Ok(())
 //! # }
+//! # }
+//! # }
 //! ```
 
 pub mod error;
+#[cfg(feature = "http")]
 pub mod http;
 pub mod signing;
 #[cfg(test)]
 mod signing_tests;
 pub mod types;
 mod utils;
+#[cfg(feature = "ws")]
 pub mod ws;
 
 use std::{
@@ -111,16 +128,18 @@ use chrono::Utc;
 use either::Either;
 /// Re-export error types.
 pub use error::{ActionError, ApiError};
+#[cfg(feature = "http")]
 use reqwest::IntoUrl;
 use rust_decimal::{Decimal, MathematicalOps, RoundingStrategy, prelude::ToPrimitive};
 use serde::{Deserialize, Serialize};
 /// Re-import types.
 pub use types::*;
+#[cfg(any(feature = "http", feature = "ws"))]
 use url::Url;
 
 use crate::{
     Address,
-    hyperevm::{from_wei, to_wei},
+    units::{from_wei, to_wei},
 };
 
 /// Client order ID (cloid).
@@ -138,10 +157,12 @@ pub type OidOrCloid = Either<u64, Cloid>;
 /// Re-export of the HTTP client for HyperCore API interactions.
 ///
 /// Use this client for placing orders, querying balances, and managing positions.
+#[cfg(feature = "http")]
 pub use http::Client as HttpClient;
 /// Re-export of the WebSocket connection for real-time market data.
 ///
 /// Use this for subscribing to trades, order books, and order updates.
+#[cfg(feature = "ws")]
 pub use ws::Connection as WebSocket;
 
 /// Thread-safe nonce generator for Hyperliquid transactions.
@@ -184,6 +205,9 @@ pub use ws::Connection as WebSocket;
 /// # Use with HTTP Client
 ///
 /// ```no_run
+/// # fn main() {
+/// # #[cfg(feature = "http")]
+/// # {
 /// use hypersdk::hypercore::{self, NonceHandler};
 ///
 /// # async fn example() -> anyhow::Result<()> {
@@ -194,6 +218,8 @@ pub use ws::Connection as WebSocket;
 /// let nonce1 = nonce_handler.next();
 /// let nonce2 = nonce_handler.next();
 /// # Ok(())
+/// # }
+/// # }
 /// # }
 /// ```
 pub struct NonceHandler {
@@ -521,11 +547,17 @@ pub const USDC_CONTRACT_IN_EVM: Address = address!("0xb88339CB7199b77E23DB6E8903
 /// # Example
 ///
 /// ```
+/// # fn main() {
+/// # #[cfg(feature = "http")]
+/// # {
 /// use hypersdk::hypercore;
 ///
 /// let client = hypercore::mainnet();
+/// # }
+/// # }
 /// ```
 #[inline(always)]
+#[cfg(feature = "http")]
 pub fn mainnet() -> HttpClient {
     HttpClient::new(Chain::Mainnet)
 }
@@ -537,11 +569,17 @@ pub fn mainnet() -> HttpClient {
 /// # Example
 ///
 /// ```
+/// # fn main() {
+/// # #[cfg(feature = "http")]
+/// # {
 /// use hypersdk::hypercore;
 ///
 /// let client = hypercore::testnet();
+/// # }
+/// # }
 /// ```
 #[inline(always)]
+#[cfg(feature = "http")]
 pub fn testnet() -> HttpClient {
     HttpClient::new(Chain::Testnet)
 }
@@ -553,6 +591,9 @@ pub fn testnet() -> HttpClient {
 /// # Example
 ///
 /// ```
+/// # fn main() {
+/// # #[cfg(feature = "ws")]
+/// # {
 /// use hypersdk::hypercore;
 /// use futures::StreamExt;
 ///
@@ -560,8 +601,11 @@ pub fn testnet() -> HttpClient {
 /// let mut ws = hypercore::mainnet_ws();
 /// // Subscribe to market data
 /// # }
+/// # }
+/// # }
 /// ```
 #[inline(always)]
+#[cfg(feature = "ws")]
 pub fn mainnet_ws() -> WebSocket {
     WebSocket::new(mainnet_websocket_url())
 }
@@ -570,6 +614,7 @@ pub fn mainnet_ws() -> WebSocket {
 ///
 /// URL: `https://api.hyperliquid.xyz`
 #[inline(always)]
+#[cfg(feature = "http")]
 pub fn mainnet_url() -> Url {
     "https://api.hyperliquid.xyz".parse().unwrap()
 }
@@ -578,6 +623,7 @@ pub fn mainnet_url() -> Url {
 ///
 /// URL: `wss://api.hyperliquid.xyz/ws`
 #[inline(always)]
+#[cfg(feature = "ws")]
 pub fn mainnet_websocket_url() -> Url {
     "wss://api.hyperliquid.xyz/ws".parse().unwrap()
 }
@@ -586,6 +632,7 @@ pub fn mainnet_websocket_url() -> Url {
 ///
 /// URL: `https://api.hyperliquid-testnet.xyz`
 #[inline(always)]
+#[cfg(feature = "http")]
 pub fn testnet_url() -> Url {
     "https://api.hyperliquid-testnet.xyz".parse().unwrap()
 }
@@ -594,6 +641,7 @@ pub fn testnet_url() -> Url {
 ///
 /// URL: `wss://api.hyperliquid-testnet.xyz/ws`
 #[inline(always)]
+#[cfg(feature = "ws")]
 pub fn testnet_websocket_url() -> Url {
     "wss://api.hyperliquid-testnet.xyz/ws".parse().unwrap()
 }
@@ -605,6 +653,9 @@ pub fn testnet_websocket_url() -> Url {
 /// # Example
 ///
 /// ```
+/// # fn main() {
+/// # #[cfg(feature = "ws")]
+/// # {
 /// use hypersdk::hypercore;
 /// use futures::StreamExt;
 ///
@@ -612,8 +663,11 @@ pub fn testnet_websocket_url() -> Url {
 /// let mut ws = hypercore::testnet_ws();
 /// // Subscribe to market data
 /// # }
+/// # }
+/// # }
 /// ```
 #[inline(always)]
+#[cfg(feature = "ws")]
 pub fn testnet_ws() -> WebSocket {
     WebSocket::new(testnet_websocket_url())
 }
@@ -830,6 +884,9 @@ impl PriceTick {
 /// # Example
 ///
 /// ```no_run
+/// # fn main() {
+/// # #[cfg(feature = "http")]
+/// # {
 /// use hypersdk::hypercore;
 ///
 /// # async fn example() -> anyhow::Result<()> {
@@ -841,6 +898,8 @@ impl PriceTick {
 ///         market.name, market.max_leverage, market.collateral.name);
 /// }
 /// # Ok(())
+/// # }
+/// # }
 /// # }
 /// ```
 #[derive(Debug, Clone)]
@@ -972,6 +1031,9 @@ impl PerpMarket {
 /// # Example
 ///
 /// ```no_run
+/// # fn main() {
+/// # #[cfg(feature = "http")]
+/// # {
 /// use hypersdk::hypercore;
 ///
 /// # async fn example() -> anyhow::Result<()> {
@@ -983,6 +1045,8 @@ impl PerpMarket {
 ///         market.name, market.tokens[0].name, market.tokens[1].name);
 /// }
 /// # Ok(())
+/// # }
+/// # }
 /// # }
 /// ```
 #[derive(Debug, Clone)]
@@ -1258,11 +1322,14 @@ mod tick_tests {
 ///
 /// Tokens with `evm_contract` set can be transferred between HyperCore and HyperEVM:
 /// - Use `cross_chain_address` as the destination when transferring to EVM
-/// - Use the HTTP client's [`HttpClient::transfer_to_evm`] method
+/// - Use the HTTP client's `HttpClient::transfer_to_evm` method
 ///
 /// # Example
 ///
 /// ```no_run
+/// # fn main() {
+/// # #[cfg(feature = "http")]
+/// # {
 /// use hypersdk::hypercore;
 ///
 /// # async fn example() -> anyhow::Result<()> {
@@ -1275,6 +1342,8 @@ mod tick_tests {
 ///     }
 /// }
 /// # Ok(())
+/// # }
+/// # }
 /// # }
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize, derive_more::Display)]
@@ -1353,6 +1422,9 @@ impl SpotToken {
     /// # Example
     ///
     /// ```no_run
+    /// # fn main() {
+    /// # #[cfg(feature = "http")]
+    /// # {
     /// # use hypersdk::hypercore;
     /// # async fn example() -> anyhow::Result<()> {
     /// # let client = hypercore::mainnet();
@@ -1361,6 +1433,8 @@ impl SpotToken {
     ///     .filter(|t| t.is_evm_linked())
     ///     .collect();
     /// # Ok(())
+    /// # }
+    /// # }
     /// # }
     /// ```
     #[must_use]
@@ -1615,6 +1689,7 @@ impl std::str::FromStr for RecurringEvent {
     }
 }
 
+#[cfg(feature = "http")]
 async fn raw_spot_markets(
     core_url: impl IntoUrl,
     client: reqwest::Client,
@@ -1632,6 +1707,9 @@ async fn raw_spot_markets(
 /// # Example
 ///
 /// ```no_run
+/// # fn main() {
+/// # #[cfg(feature = "http")]
+/// # {
 /// use hypersdk::hypercore;
 ///
 /// # async fn example() -> anyhow::Result<()> {
@@ -1644,7 +1722,10 @@ async fn raw_spot_markets(
 /// }
 /// # Ok(())
 /// # }
+/// # }
+/// # }
 /// ```
+#[cfg(feature = "http")]
 pub async fn spot_tokens(
     core_url: impl IntoUrl,
     client: reqwest::Client,
@@ -1662,6 +1743,9 @@ pub async fn spot_tokens(
 /// # Example
 ///
 /// ```no_run
+/// # fn main() {
+/// # #[cfg(feature = "http")]
+/// # {
 /// use hypersdk::hypercore;
 ///
 /// # async fn example() -> anyhow::Result<()> {
@@ -1674,7 +1758,10 @@ pub async fn spot_tokens(
 /// }
 /// # Ok(())
 /// # }
+/// # }
+/// # }
 /// ```
+#[cfg(feature = "http")]
 pub async fn spot_markets(
     core_url: impl IntoUrl,
     client: reqwest::Client,
@@ -1723,6 +1810,9 @@ pub async fn spot_markets(
 /// # Example
 ///
 /// ```no_run
+/// # fn main() {
+/// # #[cfg(feature = "http")]
+/// # {
 /// use hypersdk::hypercore;
 ///
 /// # async fn example() -> anyhow::Result<()> {
@@ -1735,7 +1825,10 @@ pub async fn spot_markets(
 /// }
 /// # Ok(())
 /// # }
+/// # }
+/// # }
 /// ```
+#[cfg(feature = "http")]
 pub async fn perp_dexes(
     core_url: impl IntoUrl,
     client: reqwest::Client,
@@ -1767,6 +1860,7 @@ pub async fn perp_dexes(
 
 /// Misspelled alias of [`perp_dexes`].
 #[deprecated(since = "0.2.9", note = "use perp_dexes instead")]
+#[cfg(feature = "http")]
 pub async fn perp_dexs(
     core_url: impl IntoUrl,
     client: reqwest::Client,
@@ -1776,6 +1870,7 @@ pub async fn perp_dexs(
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[cfg(feature = "http")]
 struct PerpDex {
     name: String,
 }
@@ -1783,6 +1878,7 @@ struct PerpDex {
 /// Fetches all available perpetual futures markets from HyperCore.
 ///
 /// Returns a list of all perpetual contracts with leverage, collateral, and margin information.
+#[cfg(feature = "http")]
 pub async fn perp_markets(
     core_url: impl IntoUrl,
     client: reqwest::Client,
@@ -1837,6 +1933,7 @@ pub async fn perp_markets(
 }
 
 /// Fetches outcome market metadata from HyperCore.
+#[cfg(feature = "http")]
 pub async fn outcome_meta(
     core_url: impl IntoUrl,
     client: reqwest::Client,
@@ -1874,6 +1971,7 @@ pub async fn outcome_meta(
 ///
 /// The market index is `100_000_000 + outcome * 10 + side_index`, where `side_index` is the
 /// side's position in [`OutcomeInfo::side_specs`].
+#[cfg(feature = "http")]
 pub async fn outcomes(
     core_url: impl IntoUrl,
     client: reqwest::Client,
@@ -1886,6 +1984,7 @@ pub async fn outcomes(
 ///
 /// Sides are indexed by position, not by name: template outcomes name their sides
 /// `template:Yes` and `template:No`, or after the participants.
+#[cfg(any(feature = "http", test))]
 fn outcome_markets(meta: &OutcomeMeta) -> Vec<OutcomeMarket> {
     let mut result = Vec::new();
     for o in &meta.outcomes {
@@ -1904,6 +2003,7 @@ fn outcome_markets(meta: &OutcomeMeta) -> Vec<OutcomeMarket> {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[cfg(any(feature = "http", test))]
 struct RawOutcomeMeta {
     #[serde(default)]
     outcomes: Vec<RawOutcomeInfo>,
@@ -1950,6 +2050,7 @@ struct RawOutcomeSideSpec {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[cfg(any(feature = "http", test))]
 struct RawOutcomeQuestion {
     question: u32,
     name: String,
@@ -1976,6 +2077,7 @@ fn generate_evm_transfer_address(index: usize) -> Address {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[cfg(feature = "http")]
 struct PerpTokens {
     universe: Vec<PerpUniverseItem>,
     collateral_token: usize,
@@ -1983,6 +2085,7 @@ struct PerpTokens {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[cfg(feature = "http")]
 struct PerpUniverseItem {
     name: String,
     max_leverage: u64,
@@ -2001,6 +2104,7 @@ struct PerpUniverseItem {
     // margin_table_id: u64,
 }
 
+#[cfg(feature = "http")]
 fn deserialize_growth_mode<'de, D>(deserializer: D) -> Result<bool, D::Error>
 where
     D: serde::Deserializer<'de>,
@@ -2030,6 +2134,7 @@ pub enum MarginMode {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[cfg(feature = "http")]
 struct SpotTokens {
     universe: Vec<SpotUniverseItem>,
     tokens: Vec<Token>,
@@ -2037,6 +2142,7 @@ struct SpotTokens {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[cfg(feature = "http")]
 struct SpotUniverseItem {
     // base and quote
     tokens: [u32; 2],
@@ -2106,17 +2212,19 @@ struct EvmContract {
 
 #[cfg(test)]
 mod tests {
-    use std::{
-        collections::{HashMap, HashSet},
-        sync::Arc,
-        thread,
-    };
+    use std::{sync::Arc, thread};
 
+    #[cfg(feature = "http")]
+    use std::collections::{HashMap, HashSet};
+
+    #[cfg(feature = "http")]
     use alloy::primitives::address;
 
     use super::*;
+    #[cfg(feature = "http")]
     use crate::hypercore;
 
+    #[cfg(feature = "http")]
     #[tokio::test]
     async fn test_spot_markets() {
         let client = reqwest::Client::new();
@@ -2126,6 +2234,7 @@ mod tests {
         assert!(!markets.is_empty());
     }
 
+    #[cfg(feature = "http")]
     #[tokio::test]
     async fn test_evm_send_addresses() {
         let expected_addresses = HashMap::from([
@@ -2169,6 +2278,7 @@ mod tests {
         }
     }
 
+    #[cfg(feature = "http")]
     #[tokio::test]
     async fn test_http_clearinghouse_state() {
         let client = hypercore::mainnet();
@@ -2182,6 +2292,7 @@ mod tests {
         assert!(state.margin_summary.account_value >= rust_decimal::Decimal::ZERO);
     }
 
+    #[cfg(feature = "http")]
     #[tokio::test]
     async fn test_http_user_balances() {
         let client = hypercore::mainnet();
@@ -2190,6 +2301,7 @@ mod tests {
         let _balances = client.user_balances(user).await.unwrap();
     }
 
+    #[cfg(feature = "http")]
     #[tokio::test]
     async fn test_http_user_fees() {
         let client = hypercore::mainnet();
@@ -2202,6 +2314,7 @@ mod tests {
     /// as raw JSON. A shape change here is a deserialization failure, which the
     /// `info_requests_are_still_answered` audit cannot see: it parses everything as
     /// `serde_json::Value`.
+    #[cfg(feature = "http")]
     #[tokio::test]
     async fn test_http_undocumented_typed_responses() {
         let client = hypercore::mainnet();
@@ -2245,6 +2358,7 @@ mod tests {
         assert!(client.settled_outcome(999_999_999).await.unwrap().is_none());
     }
 
+    #[cfg(feature = "http")]
     #[tokio::test]
     async fn test_http_all_mids() {
         let client = hypercore::mainnet();
@@ -2256,6 +2370,7 @@ mod tests {
         assert!(*mids.get("BTC").unwrap() > rust_decimal::Decimal::ZERO);
     }
 
+    #[cfg(feature = "http")]
     #[tokio::test]
     async fn test_http_open_orders() {
         let client = hypercore::mainnet();
@@ -2264,6 +2379,7 @@ mod tests {
         let _orders = client.open_orders(user, None).await.unwrap();
     }
 
+    #[cfg(feature = "http")]
     #[tokio::test]
     async fn test_http_perps() {
         let client = hypercore::mainnet();
@@ -2275,6 +2391,7 @@ mod tests {
         assert!(perps.iter().any(|m| m.name == "ETH"));
     }
 
+    #[cfg(feature = "http")]
     #[tokio::test]
     async fn test_http_perp_dex_details() {
         for client in [hypercore::mainnet(), hypercore::testnet()] {
@@ -2293,6 +2410,7 @@ mod tests {
         }
     }
 
+    #[cfg(feature = "http")]
     #[tokio::test]
     async fn test_http_user_star_state() {
         let client = hypercore::testnet();
@@ -2338,6 +2456,7 @@ mod tests {
         }
     }
 
+    #[cfg(feature = "http")]
     #[tokio::test]
     async fn test_http_spot() {
         let client = hypercore::mainnet();
@@ -2347,6 +2466,7 @@ mod tests {
         assert!(!spots.is_empty());
     }
 
+    #[cfg(feature = "http")]
     #[tokio::test]
     async fn test_http_delisted_markets() {
         let exp = [
@@ -2470,6 +2590,7 @@ mod tests {
         );
     }
 
+    #[cfg(feature = "http")]
     #[tokio::test]
     async fn test_http_outcome_meta_mainnet() {
         let client = hypercore::mainnet();
@@ -2478,6 +2599,7 @@ mod tests {
         let _ = meta.outcomes.len();
     }
 
+    #[cfg(feature = "http")]
     #[tokio::test]
     async fn test_http_outcome_meta_testnet() {
         let client = hypercore::testnet();
@@ -2495,6 +2617,7 @@ mod tests {
         }
     }
 
+    #[cfg(feature = "http")]
     #[tokio::test]
     async fn test_http_outcome_markets_are_distinct() {
         for client in [hypercore::mainnet(), hypercore::testnet()] {
@@ -2544,6 +2667,9 @@ mod tests {
         assert_eq!(meta.outcomes[1].side_specs[1].name, "Usain Bolt");
         assert_eq!(meta.questions.len(), 1);
         assert_eq!(meta.questions[0].question, 1);
+        assert_eq!(meta.questions[0].name, "What will Hypurr eat?");
+        assert_eq!(meta.questions[0].description, "Food journal.");
+        assert!(meta.questions[0].settled_named_outcomes.is_empty());
         assert_eq!(meta.questions[0].fallback_outcome, Some(13));
         assert_eq!(meta.questions[0].named_outcomes, vec![10, 11, 12]);
     }
